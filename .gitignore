@@ -1,0 +1,14 @@
+infrastructure/terraform.tfvars
+/.idea
+infrastructure/terraform.tfstate
+infrastructure/terraform.tfstate.backup
+infrastructure/secrets_ssm.tf
+infrastructure/secrets_variables.tf
+/keycloak-aws-test
+/local-dev
+/keycloak-local-test
+deploy.sh
+guestbook-frontend/.env
+infrastructure/.env
+/infrastructure/.terraform
+infrastructure/.terraform.lock.hcl
