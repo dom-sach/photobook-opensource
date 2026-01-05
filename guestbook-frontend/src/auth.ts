@@ -1,12 +1,7 @@
 import keycloak from "./auth/keycloak.ts";
 
-export async function initAuth(): Promise<void> {
-  await keycloak.init({
-    onLoad: "login-required",
-    pkceMethod: "S256",
-  });
-}
 
+// Helpery dla keycloaka
 export function getToken(): string | undefined {
   return keycloak.token;
 }

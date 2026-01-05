@@ -4,7 +4,7 @@ set -e
 KEYCLOAK_VERSION="21.1.2"
 KEYCLOAK_USER="keycloak"
 KEYCLOAK_DIR="/opt/keycloak"
-KEYCLOAK_REALM="guestbook"
+KEYCLOAK_REALM="guestbook-frontend"
 KEYCLOAK_ADMIN_USER="admin"
 KEYCLOAK_ADMIN_PASSWORD="admin123"
 KEYCLOAK_PORT="8180"
@@ -76,15 +76,15 @@ $${KEYCLOAK_DIR}/bin/kcadm.sh config credentials \
   --user $${KEYCLOAK_ADMIN_USER} \
   --password $${KEYCLOAK_ADMIN_PASSWORD}
 
-echo "=== Create art gallery realm ==="
+echo "=== Create realm ==="
   $${KEYCLOAK_DIR}/bin/kcadm.sh create realms \
     --server http://localhost:$${KEYCLOAK_PORT} \
     -s realm=$${KEYCLOAK_REALM} \
     -s enabled=true \
     -s registrationAllowed=true \
     -s registrationEmailAsUsername=true \
-    -s verifyEmail=true \
-    -s resetPasswordAllowed=true \
+    -s verifyEmail=false \
+    -s resetPasswordAllowed=false \
     -s rememberMe=true \
     -s loginWithEmailAllowed=true \
     -s passwordPolicy="length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername" \
@@ -102,7 +102,7 @@ $${KEYCLOAK_DIR}/bin/kcadm.sh create clients \
   -f - <<EOF
 {
   "clientId": "guestbook-frontend",
-  "name": "Art Gallery Frontend",
+  "name": "Guestbook Frontend",
   "enabled": true,
   "protocol": "openid-connect",
 
@@ -114,7 +114,7 @@ $${KEYCLOAK_DIR}/bin/kcadm.sh create clients \
   "bearerOnly": false,
 
   "attributes": {
-    "pkce.code.challenge.method": "plain"
+    "pkce.code.challenge.method": "S256"
   },
 
   "redirectUris": [

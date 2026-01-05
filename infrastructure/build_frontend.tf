@@ -6,7 +6,8 @@ resource "null_resource" "build_frontend" {
       AWS_REGION               = var.aws_region
       ECR_URL                  = aws_ecr_repository.frontend.repository_url
       VITE_BACKEND_URL        = "http://${aws_lb.guestbook_alb.dns_name}"
-      VITE_KEYCLOAK_URL        = "http://${aws_instance.keycloak.public_ip}:8080"
+      VITE_FRONTEND_URL        = "http://${aws_lb.guestbook_alb.dns_name}"
+      VITE_KEYCLOAK_URL = "http://${aws_lb.guestbook_alb.dns_name}"
       VITE_KEYCLOAK_REALM      = "guestbook"
       VITE_KEYCLOAK_CLIENT_ID = "guestbook-frontend"
     }

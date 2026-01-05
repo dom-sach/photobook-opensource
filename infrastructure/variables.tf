@@ -35,6 +35,12 @@ variable "keycloak_admin_user" {
   default = "admin"
 }
 
+variable "smtp_user" {
+  default = "keycloak"
+  type = string
+  description = "SMTP user for Keycloak emails"
+}
+
 variable "keycloak_admin_password" {
   default = "admin12345!"
 }

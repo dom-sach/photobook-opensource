@@ -3,6 +3,9 @@ setlocal
 
 echo === Build frontend ===
 set VITE_BACKEND_URL=%VITE_BACKEND_URL%
+set VITE_FRONTEND_URL=%VITE_FRONTEND_URL%
+set VITE_KEYCLOAK_URL=%VITE_KEYCLOAK_URL%
+
 
 
 if "%AWS_REGION%"=="" (
@@ -20,13 +23,20 @@ if "%VITE_BACKEND_URL%"=="" (
   exit /b 1
 )
 
+if "%VITE_KEYCLOAK_URL%"=="" (
+  echo VITE_KEYCLOAK_URL not set
+  exit /b 1
+)
+
+
 
 cd ..\guestbook-frontend
 
 echo Budowanie obrazu frontendu...
 docker build ^
 	--build-arg VITE_BACKEND_URL=%VITE_BACKEND_URL% ^
-	--build-arg VITE_KEYCLOAK_URL=http://<KEYCLOAK_PUBLIC_IP>:8080 ^
+	--build-arg VITE_FRONTEND_URL=%VITE_FRONTEND_URL% ^
+	--build-arg VITE_KEYCLOAK_URL=%VITE_KEYCLOAK_URL% ^
     --build-arg VITE_KEYCLOAK_REALM=guestbook ^
     --build-arg VITE_KEYCLOAK_CLIENT_ID=guestbook-frontend ^
 	--platform=linux/amd64 ^

@@ -9,11 +9,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-keycloak.init({
-  onLoad: "login-required",
-  pkceMethod: "S256",
-});
-
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {

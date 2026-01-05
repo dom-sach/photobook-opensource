@@ -197,13 +197,6 @@ resource "aws_route_table_association" "private_assoc" {
 }
 
 
-
-variable "smtp_user" {
-  type        = string
-  description = "SMTP user for Keycloak emails"
-}
-
-
 resource "aws_lb_target_group_attachment" "keycloak" {
   target_group_arn = aws_lb_target_group.keycloak.arn
   target_id        = aws_instance.keycloak.id
