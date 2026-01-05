@@ -38,28 +38,40 @@ public class SecurityConfig {
     JwtDecoder jwtDecoder() {
         String issuer = System.getenv("OIDC_ISSUER_URI");
 
-        NimbusJwtDecoder jwtDecoder =
-                JwtDecoders.fromIssuerLocation(issuer);
+        NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(issuer);
 
-        OAuth2TokenValidator<Jwt> azpValidator = jwt -> {
-            Object azp = jwt.getClaim("azp");
-            if ("guestbook-frontend".equals(azp)) {
-                return OAuth2TokenValidatorResult.success();
-            }
-            return OAuth2TokenValidatorResult.failure(
-                    new OAuth2Error("invalid_token", "Invalid authorized party (azp)", null)
-            );
-        };
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
 
-        OAuth2TokenValidator<Jwt> withIssuer =
-                JwtValidators.createDefaultWithIssuer(issuer);
-
-        jwtDecoder.setJwtValidator(
-                new DelegatingOAuth2TokenValidator<>(withIssuer, azpValidator)
-        );
-
+        jwtDecoder.setJwtValidator(withIssuer);
         return jwtDecoder;
     }
+
+//    @Bean
+//    JwtDecoder jwtDecoder() {
+//        String issuer = System.getenv("OIDC_ISSUER_URI");
+//
+//        NimbusJwtDecoder jwtDecoder =
+//                JwtDecoders.fromIssuerLocation(issuer);
+//
+//        OAuth2TokenValidator<Jwt> azpValidator = jwt -> {
+//            Object azp = jwt.getClaim("azp");
+//            if ("guestbook-frontend".equals(azp)) {
+//                return OAuth2TokenValidatorResult.success();
+//            }
+//            return OAuth2TokenValidatorResult.failure(
+//                    new OAuth2Error("invalid_token", "Invalid authorized party (azp)", null)
+//            );
+//        };
+//
+//        OAuth2TokenValidator<Jwt> withIssuer =
+//                JwtValidators.createDefaultWithIssuer(issuer);
+//
+//        jwtDecoder.setJwtValidator(
+//                new DelegatingOAuth2TokenValidator<>(withIssuer, azpValidator)
+//        );
+//
+//        return jwtDecoder;
+//    }
 
 }
 

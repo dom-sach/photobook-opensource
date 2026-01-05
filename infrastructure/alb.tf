@@ -58,40 +58,21 @@ resource "aws_lb_target_group" "frontend" {
 }
 
 
-resource "aws_lb_listener_rule" "frontend" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 100
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.frontend.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/*"]
-    }
-  }
-}
-
-# ALB dla keycloaka (wspólny)
-# resource "aws_lb_listener_rule" "keycloak" {
+# resource "aws_lb_listener_rule" "frontend" {
 #   listener_arn = aws_lb_listener.http.arn
-#   priority     = 5
+#   priority     = 100
 #
 #   action {
 #     type             = "forward"
-#     target_group_arn = aws_lb_target_group.keycloak.arn
+#     target_group_arn = aws_lb_target_group.frontend.arn
 #   }
 #
 #   condition {
 #     path_pattern {
-#       values = ["/auth/*", "/realms/*", "/admin/*"]
+#       values = ["/*"]
 #     }
 #   }
 # }
-
-
 
 
 # Listener rule /api/* → backend

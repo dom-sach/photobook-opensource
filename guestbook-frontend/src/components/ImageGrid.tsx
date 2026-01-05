@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ImageCard from "./ImageCard";
+import keycloak from "../auth/keycloak";
 
 interface ImageItem {
   id: string;
@@ -13,16 +14,42 @@ export default function ImageGrid() {
   const API = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
-    const token = localStorage.getItem("id_token");
+    const loadImages = async () => {
+      try {
+        // upewniamy się, że token jest aktualny
+        await keycloak.updateToken(30);
 
-    fetch(`${API}/api/images`, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => setImages(data));
-  }, []);
+        const token = keycloak.token;
+        if (!token) {
+          console.error("[ImageGrid] No Keycloak token available");
+          return;
+        }
+
+        const res = await fetch(`${API}/api/images`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          console.error(
+            "[ImageGrid] Backend error:",
+            res.status,
+            txt
+          );
+          return;
+        }
+
+        const data = await res.json();
+        setImages(data);
+      } catch (err) {
+        console.error("[ImageGrid] Failed to load images", err);
+      }
+    };
+
+    loadImages();
+  }, [API]);
 
   return (
     <div

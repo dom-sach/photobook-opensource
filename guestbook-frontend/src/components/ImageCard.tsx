@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import keycloak from "../auth/keycloak";
 
 interface Comment {
   id: string;
@@ -21,63 +22,91 @@ export default function ImageCard({ image }: { image: ImageItem }) {
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [text, setText] = useState("");
 
-  const token = localStorage.getItem("id_token");
+  // 🔁 wspólna funkcja do pobierania komentarzy
+  const loadComments = async () => {
+    try {
+      await keycloak.updateToken(30);
 
-  // pobieranie komentarzy
-  useEffect(() => {
-    const token = localStorage.getItem("id_token");
-
-    fetch(`${API}/api/images/${image.id}/comments`, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-      },
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          console.error("Błąd pobierania komentarzy:", res.status);
-          return [];
-        }
-        return res.json();
-      })
-      .then((data) => setComments(data as Comment[]))
-      .catch((err) => {
-        console.error("Błąd komentarzy (network):", err);
+      const token = keycloak.token;
+      if (!token) {
+        console.error("[ImageCard] No Keycloak token");
         setComments([]);
+        return;
+      }
+
+      const res = await fetch(`${API}/api/images/${image.id}/comments`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-  }, [image.id, API]);
 
+      if (!res.ok) {
+        const txt = await res.text();
+        console.error(
+          "[ImageCard] Failed to load comments:",
+          res.status,
+          txt
+        );
+        setComments([]);
+        return;
+      }
 
-  // wysyłanie komentarza
+      const data = await res.json();
+      setComments(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("[ImageCard] Comment fetch error", err);
+      setComments([]);
+    }
+  };
+
+  // 🔄 pobranie komentarzy po załadowaniu karty
+  useEffect(() => {
+    loadComments();
+  }, [image.id]);
+
+  // ✍️ wysyłanie komentarza
   const sendComment = async () => {
     if (text.trim().length === 0 || text.length > 300) return;
 
-    await fetch(`${API}/api/images/${image.id}/comments`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token ? `Bearer ${token}` : "",
-      },
-      body: JSON.stringify({ text }),
-    });
+    try {
+      await keycloak.updateToken(30);
+      const token = keycloak.token;
 
-    // odśwież komentarze po wysłaniu
-    const res = await fetch(`${API}/api/images/${image.id}/comments`, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-      },
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setComments(data);
-      } else {
-        setComments([]);
+      if (!token) {
+        console.error("[ImageCard] No token on sendComment");
+        return;
       }
-    }
 
-    setText("");
-    setShowCommentBox(false);
+      const res = await fetch(
+        `${API}/api/images/${image.id}/comments`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ text }),
+        }
+      );
+
+      if (!res.ok) {
+        const txt = await res.text();
+        console.error(
+          "[ImageCard] Failed to send comment:",
+          res.status,
+          txt
+        );
+        return;
+      }
+
+      // 🔄 odśwież komentarze po sukcesie
+      await loadComments();
+
+      setText("");
+      setShowCommentBox(false);
+    } catch (err) {
+      console.error("[ImageCard] Send comment error", err);
+    }
   };
 
   return (
@@ -101,7 +130,7 @@ export default function ImageCard({ image }: { image: ImageItem }) {
 
         {comments.map((c) => (
           <div key={c.id} style={{ marginBottom: "0.8rem" }}>
-            <h5>User: {c.authorEmail}</h5> <br />
+            <strong>User:</strong> {c.authorEmail} <br />
             <span>{c.text}</span> <br />
             <small style={{ color: "#777" }}>
               {new Date(c.createdAt).toLocaleDateString()}

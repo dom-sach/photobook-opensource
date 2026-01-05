@@ -78,7 +78,12 @@ resource "aws_lb_listener_rule" "keycloak" {
 
   condition {
     path_pattern {
-      values = ["/.well-known/*", "/realms/*", "/resources/*", "/admin/*", "/js/*"]
+      values = [
+        # "/.well-known/*",
+        "/realms/*",
+        "/resources/*",
+        "/admin/*",
+        "/js/*"]
     }
   }
 }
