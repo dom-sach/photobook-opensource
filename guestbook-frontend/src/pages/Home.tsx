@@ -6,6 +6,8 @@ import keycloak from "../auth/keycloak";
 
 export default function Home() {
 
+  console.log("[Home.tsx] TOKEN PARSED:", keycloak.tokenParsed);
+
   // Constants
   const [showUpload, setShowUpload] = useState(false);
   const [file, setFile] = useState<File | null>(null);

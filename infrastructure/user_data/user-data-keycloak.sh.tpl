@@ -4,7 +4,7 @@ set -e
 KEYCLOAK_VERSION="21.1.2"
 KEYCLOAK_USER="keycloak"
 KEYCLOAK_DIR="/opt/keycloak"
-KEYCLOAK_REALM="guestbook-frontend"
+KEYCLOAK_REALM="guestbook"
 KEYCLOAK_ADMIN_USER="admin"
 KEYCLOAK_ADMIN_PASSWORD="admin123"
 KEYCLOAK_PORT="8180"

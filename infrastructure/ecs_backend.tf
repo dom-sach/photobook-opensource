@@ -38,8 +38,12 @@ resource "aws_ecs_task_definition" "backend" {
         # Dla Keycloaka EC2
         {
           name  = "SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI"
-          value = "http://${aws_instance.keycloak.public_ip}:8080/realms/guestbook"
-        }
+          value = "http://${aws_lb.guestbook_alb.dns_name}/realms/guestbook"
+        },
+        {
+          name  = "OIDC_ISSUER_URI"
+          value = "http://${aws_lb.guestbook_alb.dns_name}/realms/guestbook"
+        },
       ]
 
       secrets = [
