@@ -31,21 +31,46 @@ export default function Home() {
   // Upload obrazka
   const handleUpload = async () => {
     if (!file) return;
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('caption', caption);
-    const token = keycloak.token;
-    await fetch(`${API}/api/images`, {
-      method: "POST",
-      body: formData,
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-      },
-    });
-    setShowUpload(false);
-    setFile(null);
-    setCaption('');
+
+    try {
+      await keycloak.updateToken(30);
+      const token = keycloak.token;
+
+      if (!token) {
+        console.error("[Upload] No token");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("caption", caption);
+
+      const res = await fetch(`${API}/api/images`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const text = await res.text();
+
+      if (!res.ok) {
+        console.error("[Upload] Backend error:", res.status, text);
+        alert("Upload error: " + text);
+        return;
+      }
+
+      console.log("[Upload] Success:", text);
+
+      setShowUpload(false);
+      setFile(null);
+      setCaption("");
+    } catch (err) {
+      console.error("[Upload] Network error:", err);
+    }
   };
+
 
   // Logout
   const handleLogout = () => {

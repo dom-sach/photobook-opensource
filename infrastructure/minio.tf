@@ -8,12 +8,11 @@ resource "aws_ecs_task_definition" "minio" {
   execution_role_arn = var.lab_role_arn
   task_role_arn      = var.lab_role_arn
 
+
   container_definitions = jsonencode([
     {
       name  = "minio"
-      image = "minio/minio:RELEASE.2024-01-16T16-07-38Z"
-
-      command = ["server", "/data", "--console-address", ":9001"]
+      image = "${aws_ecr_repository.minio.repository_url}:latest"
 
       portMappings = [
         { containerPort = 9000 },
@@ -22,7 +21,11 @@ resource "aws_ecs_task_definition" "minio" {
 
       environment = [
         { name = "MINIO_ROOT_USER", value = "minioadmin" },
-        { name = "MINIO_ROOT_PASSWORD", value = "minioadmin" }
+        { name = "MINIO_ROOT_PASSWORD", value = "minioadmin" },
+        { name = "MEDIA_BUCKET", value = "media" },
+        { name = "S3_ACCESS_KEY", value = "minioadmin" },
+        { name = "S3_SECRET_KEY", value = "minioadmin" },
+        { name = "S3_BUCKET_NAME", value = "media" },
       ]
 
       logConfiguration = {
@@ -33,6 +36,7 @@ resource "aws_ecs_task_definition" "minio" {
           awslogs-stream-prefix = "minio"
         }
       }
+
     }
   ])
 }
@@ -49,5 +53,11 @@ resource "aws_ecs_service" "minio" {
     subnets         = aws_subnet.public[*].id
     security_groups = [aws_security_group.ecs_sg.id]
     assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.minio.arn
+    container_name   = "minio"
+    container_port   = 9000
   }
 }

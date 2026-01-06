@@ -30,6 +30,7 @@ resource "aws_security_group" "ecs_sg" {
     security_groups = [aws_security_group.alb_sg.id]
   }
 
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -37,3 +38,13 @@ resource "aws_security_group" "ecs_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+resource "aws_security_group_rule" "ecs_to_minio" {
+  type                     = "ingress"
+  from_port                = 9000
+  to_port                  = 9000
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.ecs_sg.id
+  source_security_group_id = aws_security_group.ecs_sg.id
+}
+

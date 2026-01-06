@@ -30,10 +30,26 @@ resource "aws_ecs_task_definition" "backend" {
           name  = "SPRING_DATASOURCE_USERNAME"
           value = var.db_user
         },
-        { name = "S3_ENDPOINT", value = "http://minio:9000" },
-        { name = "MEDIA_BUCKET", value = "media" },
-        { name = "S3_ACCESS_KEY", value = "minioadmin" },
-        { name = "S3_SECRET_KEY", value = "minioadmin" },
+
+        # === MinIO / S3 ===
+        {
+          name  = "S3_ENDPOINT"
+          value = "http://${aws_lb.guestbook_alb.dns_name}/minio"
+        },
+        {
+          name  = "S3_ACCESS_KEY"
+          value = "minioadmin"
+        },
+        {
+          name  = "S3_SECRET_KEY"
+          value = "minioadmin"
+        },
+        {
+          name  = "S3_BUCKET"
+          value = "media"
+        },
+
+        {name= "dummy", value="hello"},
 
         # Dla Keycloaka EC2
         {

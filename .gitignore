@@ -12,3 +12,5 @@ guestbook-frontend/.env
 infrastructure/.env
 /infrastructure/.terraform
 infrastructure/.terraform.lock.hcl
+terraform.tfstate
+infrastructure/.terraform.tfstate.lock.info

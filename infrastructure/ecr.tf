@@ -15,3 +15,9 @@ resource "aws_ecr_repository" "frontend" {
   }
   force_delete = true
 }
+
+# MinIO
+resource "aws_ecr_repository" "minio" {
+  name = "guestbook-minio"
+}
+

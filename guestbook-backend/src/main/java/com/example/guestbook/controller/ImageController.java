@@ -31,15 +31,27 @@ public class ImageController {
     @PostMapping
     public ResponseEntity<?> uploadImage(
             @RequestPart("file") MultipartFile file,
-            @RequestPart("caption") String caption,
+            @RequestPart(value = "caption", required = false) String caption,
             @AuthenticationPrincipal Jwt jwt
     ) {
+
+        System.out.println("=== UPLOAD IMAGE HIT ===");
+        System.out.println("file = " + (file != null ? file.getOriginalFilename() : "NULL"));
+        System.out.println("file size = " + (file != null ? file.getSize() : "NULL"));
+        System.out.println("contentType = " + (file != null ? file.getContentType() : "NULL"));
+        System.out.println("caption = " + caption);
+        System.out.println("jwt present = " + (jwt != null));
 
         if (jwt == null) {
             log.error(">>> JWT IS NULL");
             return ResponseEntity.status(401).body("JWT missing");
         }
         try {
+
+            if (caption == null) {
+                caption = "";
+            }
+
             String userIdentifier = currentUserService.getIdentifier(jwt);
             log.info(">>> JWT subject: {}", jwt.getSubject());
 
