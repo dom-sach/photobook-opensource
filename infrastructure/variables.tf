@@ -44,3 +44,30 @@ variable "smtp_user" {
 variable "keycloak_admin_password" {
   default = "admin12345!"
 }
+
+# === MinIO
+variable "minio_access_key" {
+  type    = string
+  default = "minioadmin"
+}
+
+variable "minio_secret_key" {
+  type    = string
+  default = "minioadmin"
+}
+
+variable "minio_bucket" {
+  type    = string
+  default = "media"
+}
+
+variable "minio_root_user" {
+  type    = string
+  default = "minioadmin"
+}
+
+variable "minio_root_password" {
+  type      = string
+  sensitive = true
+  default   = "minioadmin"
+}

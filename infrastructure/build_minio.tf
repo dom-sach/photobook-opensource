@@ -1,4 +1,4 @@
-resource "null_resource" "build_minio" {
+resource "null_resource" "build_minio_init_image" {
   provisioner "local-exec" {
     command = "build-minio.bat"
     environment = {

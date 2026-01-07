@@ -155,33 +155,6 @@ resource "aws_lb_listener_rule" "grafana_rule" {
 }
 
 
-# ==== MinIO
-resource "aws_lb_target_group" "minio" {
-  name        = "guestbook-minio-tg"
-  port        = 9000
-  protocol    = "HTTP"
-  target_type = "ip"
-  vpc_id      = aws_vpc.main.id
 
-  health_check {
-    path = "/minio/health/ready"
-  }
-}
-
-resource "aws_lb_listener_rule" "minio" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 10
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.minio.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/minio/*"]
-    }
-  }
-}
 
 

@@ -20,9 +20,9 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -55,10 +55,10 @@ public class ImageService {
             throw new IllegalArgumentException("Plik jest pusty");
         }
 
-        if (!amazonS3.doesBucketExistV2(bucket)) {
-            amazonS3.createBucket(bucket);
-            System.out.println("[ImageService] Tworze nowy bucket");
-        }
+//        if (!amazonS3.doesBucketExistV2(bucket)) {
+//            amazonS3.createBucket(bucket);
+//            System.out.println("[ImageService] Tworze nowy bucket");
+//        }
 
         String originalName = file.getOriginalFilename();
         System.out.println("[ImageService] Mam plik do wyslania: " + originalName);

@@ -1,12 +1,15 @@
 @echo off
-echo Building MinIO image...
+echo === Building MinIO init image ===
 
-docker build -t guestbook-minio ./minio
+docker build -t photobook-minio-init infrastructure\minio
 
-echo Login to ECR...
+echo === Logging in to ECR ===
 FOR /F "tokens=*" %%i IN ('aws ecr get-login-password --region %AWS_REGION%') DO docker login --username AWS --password %%i %ECR_URL%
 
-docker tag guestbook-minio:latest %ECR_URL%:latest
+echo === Tagging image ===
+docker tag photobook-minio-init:latest %ECR_URL%:latest
+
+echo === Pushing image ===
 docker push %ECR_URL%:latest
 
-echo MinIO image pushed.
+echo === MinIO init image pushed ===

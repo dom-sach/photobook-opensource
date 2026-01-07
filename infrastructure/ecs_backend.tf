@@ -2,13 +2,96 @@ resource "aws_ecs_task_definition" "backend" {
   family                   = "guestbook-backend-task"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = 256
-  memory                   = 512
+  cpu                      = 512
+  memory                   = 1024
 
   execution_role_arn = var.lab_role_arn
   task_role_arn      = var.lab_role_arn
 
   container_definitions = jsonencode([
+    # =========================
+    # MINIO
+    # =========================
+    {
+      name      = "minio"
+      image     = "minio/minio:RELEASE.2024-10-13T13-34-11Z.fips"
+      essential = true
+
+      command = [
+        "server",
+        "/data",
+        "--address", "0.0.0.0:9000",
+        "--console-address", "0.0.0.0:9001"
+      ]
+
+      portMappings = [
+        { containerPort = 9000, protocol = "tcp" },
+        { containerPort = 9001, protocol = "tcp" }
+      ]
+
+      environment = [
+        { name = "MINIO_ENDPOINT",    value = "http://localhost:9000" },
+        { name = "MINIO_BUCKET",      value = var.minio_bucket },
+        { name = "MEDIA_BUCKET", value = var.minio_bucket },
+        { name = "MINIO_ACCESS_KEY",  value = var.minio_root_user },
+        { name = "MINIO_SECRET_KEY",  value = var.minio_root_password },
+        { name = "S3_ACCESS_KEY", value = var.minio_root_user },
+        { name = "S3_SECRET_KEY", value = var.minio_root_password },
+        { name = "MINIO_ROOT_USER",     value = var.minio_root_user },
+        { name = "MINIO_ROOT_PASSWORD", value = var.minio_root_password },
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs",
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.backend.name
+          awslogs-region        = var.aws_region
+          awslogs-stream-prefix = "minio"
+        }
+      }
+    },
+
+    # =========================
+    # MINIO INIT (CREATE BUCKET)
+    # =========================
+    {
+      name      = "minio-init"
+      image     = "${aws_ecr_repository.minio.repository_url}:latest"
+      essential = false
+
+      dependsOn = [
+        {
+          containerName = "minio"
+          condition     = "START"
+        }
+      ]
+
+      environment = [
+        { name = "MINIO_ENDPOINT",    value = "http://localhost:9000" },
+        { name = "MINIO_BUCKET",      value = var.minio_bucket },
+        { name = "MEDIA_BUCKET", value = var.minio_bucket },
+        { name = "MINIO_ACCESS_KEY",  value = var.minio_root_user },
+        { name = "MINIO_SECRET_KEY",  value = var.minio_root_password },
+        { name = "S3_ACCESS_KEY", value = var.minio_root_user },
+        { name = "S3_SECRET_KEY", value = var.minio_root_password },
+        { name = "MINIO_ROOT_USER",     value = var.minio_root_user },
+        { name = "MINIO_ROOT_PASSWORD", value = var.minio_root_password },
+        {name="dummy", value = "minio"},
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs",
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.backend.name
+          awslogs-region        = var.aws_region
+          awslogs-stream-prefix = "minio-init"
+        }
+      }
+    },
+
+    # =========================
+    # BACKEND
+    # =========================
     {
       name      = "backend"
       image     = "${aws_ecr_repository.backend.repository_url}:latest"
@@ -32,24 +115,15 @@ resource "aws_ecs_task_definition" "backend" {
         },
 
         # === MinIO / S3 ===
-        {
-          name  = "S3_ENDPOINT"
-          value = "http://${aws_lb.guestbook_alb.dns_name}/minio"
-        },
-        {
-          name  = "S3_ACCESS_KEY"
-          value = "minioadmin"
-        },
-        {
-          name  = "S3_SECRET_KEY"
-          value = "minioadmin"
-        },
-        {
-          name  = "S3_BUCKET"
-          value = "media"
-        },
-
-        {name= "dummy", value="hello"},
+        { name = "MINIO_ENDPOINT",    value = "http://localhost:9000" },
+        { name = "MINIO_BUCKET",      value = var.minio_bucket },
+        { name = "MEDIA_BUCKET", value = var.minio_bucket },
+        { name = "MINIO_ACCESS_KEY",  value = var.minio_root_user },
+        { name = "MINIO_SECRET_KEY",  value = var.minio_root_password },
+        { name = "S3_ACCESS_KEY", value = var.minio_root_user },
+        { name = "S3_SECRET_KEY", value = var.minio_root_password },
+        { name = "MINIO_ROOT_USER",     value = var.minio_root_user },
+        { name = "MINIO_ROOT_PASSWORD", value = var.minio_root_password },
 
         # Dla Keycloaka EC2
         {
