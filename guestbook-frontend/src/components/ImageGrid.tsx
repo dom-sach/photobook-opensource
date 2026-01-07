@@ -23,18 +23,11 @@ export default function ImageGrid() {
         console.log("Response from get images: ", res)
 
         if (!res.ok) return;
-
         const data: ImageItem[] = await res.json();
+        setImages(data);
+        console.log("Response data from getting images: ", data)
+        console.log("IMAGE URL FROM BACKEND:", data[0].url);
 
-        console.log("Data from get images: ", data)
-
-        const fixed = data.map(img => ({
-          ...img,
-          url: `${API}/api/images/${img.url.split('/').pop()}`
-        }));
-
-
-        setImages(fixed);
       } catch (err) {
         console.error("[ImageGrid] Failed to load images", err);
       }

@@ -40,6 +40,12 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "S3_SECRET_KEY", value = var.minio_root_password },
         { name = "MINIO_ROOT_USER",     value = var.minio_root_user },
         { name = "MINIO_ROOT_PASSWORD", value = var.minio_root_password },
+        {
+          name  = "PUBLIC_BASE_URL"
+          value = "http://${aws_lb.guestbook_alb.dns_name}"
+        },
+
+        {name="fummy", value="dummy"}
       ]
 
       logConfiguration = {
@@ -87,6 +93,10 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "S3_SECRET_KEY", value = var.minio_root_password },
         { name = "MINIO_ROOT_USER",     value = var.minio_root_user },
         { name = "MINIO_ROOT_PASSWORD", value = var.minio_root_password },
+        {
+          name  = "PUBLIC_BASE_URL"
+          value = "http://${aws_lb.guestbook_alb.dns_name}"
+        },
 
 
         # Dla Keycloaka EC2
@@ -139,7 +149,16 @@ resource "aws_ecs_service" "backend" {
     container_port   = 8080
   }
 
+  # MEDIA → minio
+  load_balancer {
+    target_group_arn = aws_lb_target_group.minio.arn
+    container_name   = "minio"
+    container_port   = 9000
+  }
+
+
   depends_on = [
-    aws_lb_listener_rule.api_backend
+    aws_lb_listener_rule.api_backend,
+    aws_lb_listener_rule.media_minio
   ]
 }

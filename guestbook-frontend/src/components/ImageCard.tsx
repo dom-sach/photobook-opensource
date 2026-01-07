@@ -99,23 +99,24 @@ export default function ImageCard({ image }: { image: ImageItem }) {
           height: "220px",
           objectFit: "cover",
           background: "#eee",
+          borderRadius: "8px"
         }}
       />
 
       {/* META */}
-      <div style={{ padding: "1rem" }}>
-        <h4 style={{ margin: "0 0 0.3rem 0" }}>
+      <div style={{padding: "1rem"}}>
+        <h4 style={{margin: "0 0 0.3rem 0"}}>
           {image.caption || "Bez opisu"}
         </h4>
-        <small style={{ color: "#6b7280" }}>
+        <small style={{color: "#6b7280"}}>
           {new Date(image.uploadTime).toLocaleString()}
         </small>
       </div>
 
       {/* COMMENTS */}
-      <div style={{ padding: "0 1rem 1rem" }}>
+      <div style={{padding: "0 1rem 1rem"}}>
         {comments.length === 0 && (
-          <p style={{ fontStyle: "italic", color: "#9ca3af" }}>
+          <p style={{fontStyle: "italic", color: "#9ca3af"}}>
             Brak komentarzy
           </p>
         )}
@@ -132,7 +133,7 @@ export default function ImageCard({ image }: { image: ImageItem }) {
           >
             <strong>{c.authorEmail}</strong>
             <div>{c.text}</div>
-            <small style={{ color: "#9ca3af" }}>
+            <small style={{color: "#9ca3af"}}>
               {new Date(c.createdAt).toLocaleString()}
             </small>
           </div>
@@ -140,13 +141,13 @@ export default function ImageCard({ image }: { image: ImageItem }) {
       </div>
 
       {/* ACTIONS */}
-      <div style={{ padding: "0 1rem 1rem" }}>
+      <div style={{padding: "0 1rem 1rem"}}>
         <button onClick={() => setShowCommentBox(!showCommentBox)}>
           Skomentuj
         </button>
 
         {showCommentBox && (
-          <div style={{ marginTop: "0.5rem" }}>
+          <div style={{marginTop: "0.5rem"}}>
             <textarea
               value={text}
               maxLength={300}
@@ -158,7 +159,7 @@ export default function ImageCard({ image }: { image: ImageItem }) {
                 marginBottom: "0.5rem",
               }}
             />
-            <button onClick={sendComment} style={{ width: "100%" }}>
+            <button onClick={sendComment} style={{width: "100%"}}>
               Wyślij
             </button>
           </div>

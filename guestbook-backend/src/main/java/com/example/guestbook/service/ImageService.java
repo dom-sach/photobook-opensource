@@ -34,18 +34,17 @@ public class ImageService {
     @Value("${s3.bucket}")
     private String bucket;
 
-    @PostConstruct
-    public void testMinioConnection() {
-        System.out.println("[ImageService] postconstruct: " + bucket);
-//        try {
-//            boolean exists = amazonS3.doesBucketExistV2(bucket);
-//            log.info("MinIO bucket '{}' exists = {}", bucket, exists);
-//        } catch (Exception e) {
-//            log.error("MinIO connection test FAILED", e);
-//        }
+    @Value("${s3.public.base-url}")
+    private String publicBaseUrl;
 
+    public String getPublicUrl(String filename) {
+        return publicBaseUrl + "/" + bucket + "/" + filename;
     }
 
+    @PostConstruct
+    public void testMinioConnection() {
+        log.info("[ImageService] bucket={}, publicBaseUrl={}", bucket, publicBaseUrl);
+    }
 
 
     // upload obrazu
@@ -54,11 +53,6 @@ public class ImageService {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Plik jest pusty");
         }
-
-//        if (!amazonS3.doesBucketExistV2(bucket)) {
-//            amazonS3.createBucket(bucket);
-//            System.out.println("[ImageService] Tworze nowy bucket");
-//        }
 
         String originalName = file.getOriginalFilename();
         System.out.println("[ImageService] Mam plik do wyslania: " + originalName);
@@ -87,9 +81,9 @@ public class ImageService {
         return repo.findAllByOrderByUploadTimeDesc();
     }
 
-    public String getUrl(String filename) {
-        return amazonS3.getUrl(bucket, filename).toString();
-    }
+//    public String getUrl(String filename) {
+//        return amazonS3.getUrl(bucket, filename).toString();
+//    }
 
     // pobieranie obrazu
     public ResponseEntity<Resource> downloadImage(String filename) throws MalformedURLException {

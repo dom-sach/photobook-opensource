@@ -78,7 +78,7 @@ resource "aws_lb_target_group" "frontend" {
 # Listener rule /api/* → backend
 resource "aws_lb_listener_rule" "api_backend" {
   listener_arn = aws_lb_listener.http.arn
-  priority     = 20
+  priority     = 30
 
   action {
     type             = "forward"
@@ -150,6 +150,41 @@ resource "aws_lb_listener_rule" "grafana_rule" {
   condition {
     path_pattern {
       values = ["/grafana/*"]
+    }
+  }
+}
+
+
+resource "aws_lb_target_group" "minio" {
+  name        = "guestbook-minio"
+  port        = 9000
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    path                = "/minio/health/ready"
+    port                = "9000"
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    interval            = 30
+    timeout             = 5
+  }
+}
+
+
+resource "aws_lb_listener_rule" "media_minio" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 20
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.minio.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/media/*"]
     }
   }
 }

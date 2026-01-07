@@ -1,11 +1,13 @@
 package com.example.guestbook.controller;
 
+import com.example.guestbook.dto.ImageResponse;
 import com.example.guestbook.model.ImageMetadata;
 import com.example.guestbook.repository.ImageMetadataRepository;
 import com.example.guestbook.service.CurrentUserService;
 import com.example.guestbook.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +28,16 @@ public class ImageController {
     private final ImageService imageService;
     private final ImageMetadataRepository repo;
     private final CurrentUserService currentUserService;
+
+    @Value("${s3.bucket}")
+    private String bucket;
+
+    @Value("${s3.public.base-url}")
+    private String publicBaseUrl;
+
+    public String getPublicUrl(String filename) {
+        return publicBaseUrl + "/" + bucket + "/" + filename;
+    }
 
     // upload nowego obrazka
     @PostMapping
@@ -56,18 +68,15 @@ public class ImageController {
             log.info(">>> JWT subject: {}", jwt.getSubject());
 
             ImageMetadata metadata = imageService.upload(file, caption, userIdentifier);
-            String url = imageService.getUrl(metadata.getFilename());
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", metadata.getId());
-            response.put("filename", metadata.getFilename());
-            response.put("caption", metadata.getCaption());
-            response.put("uploadTime", metadata.getUploadTime());
-            response.put("url", url);
-
-            log.info(">>> Upload OK, image id={}", metadata.getId());
-
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(
+                    new ImageResponse(
+                            metadata.getId(),
+                            metadata.getCaption(),
+                            metadata.getUploadTime(),
+                            imageService.getPublicUrl(metadata.getFilename())
+                    )
+            );
 
         } catch (Exception e) {
             log.error(">>> Upload failed", e);
@@ -78,7 +87,7 @@ public class ImageController {
 
     // zwraca listę wszystkich obrazków (metadanych)
     @GetMapping
-    public ResponseEntity<List<Map<String, Object>>> listImages(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<List<ImageResponse>> listImages(@AuthenticationPrincipal Jwt jwt) {
 
         log.info(">>> ENTER GET /api/images");
 
@@ -93,33 +102,15 @@ public class ImageController {
 
         log.info(">>> Found {} images", images.size());
 
-        List<Map<String, Object>> response = images.stream()
-                .map(img -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("id", img.getId());
-                    map.put("filename", img.getFilename());
-                    map.put("caption", img.getCaption());
-                    map.put("uploadTime", img.getUploadTime());
-                    map.put("url", imageService.getUrl(img.getFilename()));
-                    return map;
-                })
+        List<ImageResponse> response = images.stream()
+                .map(img -> new ImageResponse(
+                        img.getId(),
+                        img.getCaption(),
+                        img.getUploadTime(),
+                        imageService.getPublicUrl(img.getFilename())
+                ))
                 .toList();
-
         return ResponseEntity.ok(response);
     }
 
-    // pobieranie obrazka po filename
-    @GetMapping("/{filename}")
-    public ResponseEntity<?> getImage(@PathVariable String filename) {
-        log.info(">>> ENTER GET /api/images/{}", filename);
-        log.info(">>> Controller getImage: /api/image/{}", filename);
-        try {
-            ResponseEntity<Resource> image = imageService.downloadImage(filename);
-            log.info(">>> getImage found image: {}", image);
-            return image;
-        } catch (Exception e) {
-            log.error(">>> Download failed for {}", filename, e);
-            return ResponseEntity.notFound().build();
-        }
-    }
 }
