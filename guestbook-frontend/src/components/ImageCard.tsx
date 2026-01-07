@@ -22,60 +22,41 @@ export default function ImageCard({ image }: { image: ImageItem }) {
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [text, setText] = useState("");
 
-  // 🔁 wspólna funkcja do pobierania komentarzy
   const loadComments = async () => {
     try {
       await keycloak.updateToken(30);
-
       const token = keycloak.token;
-      if (!token) {
-        console.error("[ImageCard] No Keycloak token");
-        setComments([]);
-        return;
-      }
+      if (!token) return;
 
-      const res = await fetch(`${API}/api/images/${image.id}/comments`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `${API}/api/images/${image.id}/comments`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      if (!res.ok) {
-        const txt = await res.text();
-        console.error(
-          "[ImageCard] Failed to load comments:",
-          res.status,
-          txt
-        );
-        setComments([]);
-        return;
-      }
+      if (!res.ok) return;
 
       const data = await res.json();
       setComments(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("[ImageCard] Comment fetch error", err);
+    } catch {
       setComments([]);
     }
   };
 
-  // 🔄 pobranie komentarzy po załadowaniu karty
   useEffect(() => {
     loadComments();
   }, [image.id]);
 
-  // ✍️ wysyłanie komentarza
   const sendComment = async () => {
-    if (text.trim().length === 0 || text.length > 300) return;
+    if (text.trim().length === 0) return;
 
     try {
       await keycloak.updateToken(30);
       const token = keycloak.token;
-
-      if (!token) {
-        console.error("[ImageCard] No token on sendComment");
-        return;
-      }
+      if (!token) return;
 
       const res = await fetch(
         `${API}/api/images/${image.id}/comments`,
@@ -89,83 +70,101 @@ export default function ImageCard({ image }: { image: ImageItem }) {
         }
       );
 
-      if (!res.ok) {
-        const txt = await res.text();
-        console.error(
-          "[ImageCard] Failed to send comment:",
-          res.status,
-          txt
-        );
-        return;
-      }
+      if (!res.ok) return;
 
-      // 🔄 odśwież komentarze po sukcesie
       await loadComments();
-
       setText("");
       setShowCommentBox(false);
-    } catch (err) {
-      console.error("[ImageCard] Send comment error", err);
-    }
+    } catch { /* empty */ }
   };
 
   return (
-    <div style={{ border: "1px solid #ccc", padding: "10px" }}>
-      <img src={image.url} alt={image.caption} style={{ width: "100%" }} />
+    <div
+      style={{
+        background: "white",
+        borderRadius: "12px",
+        overflow: "hidden",
+        boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* IMAGE */}
+      <img
+        src={image.url}
+        alt={image.caption}
+        loading="lazy"
+        style={{
+          width: "100%",
+          height: "220px",
+          objectFit: "cover",
+          background: "#eee",
+        }}
+      />
 
-      <h4 style={{ marginTop: "1rem" }}>{image.caption}</h4>
-      <small>{new Date(image.uploadTime).toLocaleDateString()}</small>
+      {/* META */}
+      <div style={{ padding: "1rem" }}>
+        <h4 style={{ margin: "0 0 0.3rem 0" }}>
+          {image.caption || "Bez opisu"}
+        </h4>
+        <small style={{ color: "#6b7280" }}>
+          {new Date(image.uploadTime).toLocaleString()}
+        </small>
+      </div>
 
-      <hr />
-
-      {/* Lista komentarzy */}
-      <div>
-        <h4>Komentarze:</h4>
-
+      {/* COMMENTS */}
+      <div style={{ padding: "0 1rem 1rem" }}>
         {comments.length === 0 && (
-          <p style={{ fontStyle: "italic", color: "#777" }}>
-            Brak komentarzy.
+          <p style={{ fontStyle: "italic", color: "#9ca3af" }}>
+            Brak komentarzy
           </p>
         )}
 
         {comments.map((c) => (
-          <div key={c.id} style={{ marginBottom: "0.8rem" }}>
-            <strong>User:</strong> {c.authorEmail} <br />
-            <span>{c.text}</span> <br />
-            <small style={{ color: "#777" }}>
-              {new Date(c.createdAt).toLocaleDateString()}
+          <div
+            key={c.id}
+            style={{
+              borderTop: "1px solid #eee",
+              paddingTop: "0.5rem",
+              marginTop: "0.5rem",
+              fontSize: "0.9rem",
+            }}
+          >
+            <strong>{c.authorEmail}</strong>
+            <div>{c.text}</div>
+            <small style={{ color: "#9ca3af" }}>
+              {new Date(c.createdAt).toLocaleString()}
             </small>
           </div>
         ))}
       </div>
 
-      {/* Przycisk */}
-      <button
-        style={{ marginTop: "0.5rem" }}
-        onClick={() => setShowCommentBox(!showCommentBox)}
-      >
-        Skomentuj
-      </button>
+      {/* ACTIONS */}
+      <div style={{ padding: "0 1rem 1rem" }}>
+        <button onClick={() => setShowCommentBox(!showCommentBox)}>
+          Skomentuj
+        </button>
 
-      {/* Formularz komentarza */}
-      {showCommentBox && (
-        <div style={{ marginTop: "1rem" }}>
-          <textarea
-            placeholder="Napisz komentarz (max 300 znaków)"
-            maxLength={300}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            style={{ width: "100%", minHeight: "60px" }}
-          />
-
-          <button
-            onClick={sendComment}
-            style={{ marginTop: "0.5rem", width: "100%" }}
-          >
-            Wyślij
-          </button>
-        </div>
-      )}
+        {showCommentBox && (
+          <div style={{ marginTop: "0.5rem" }}>
+            <textarea
+              value={text}
+              maxLength={300}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Napisz komentarz…"
+              style={{
+                width: "100%",
+                minHeight: "60px",
+                marginBottom: "0.5rem",
+              }}
+            />
+            <button onClick={sendComment} style={{ width: "100%" }}>
+              Wyślij
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+

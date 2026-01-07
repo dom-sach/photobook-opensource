@@ -3,6 +3,8 @@ import {useAuth} from "../contexts/AuthContext.tsx";
 import {useNavigate} from "react-router-dom";
 import ImageGrid from "../components/ImageGrid.tsx";
 import keycloak from "../auth/keycloak";
+import "../styles/Home.css";
+
 
 export default function Home() {
 
@@ -80,114 +82,48 @@ export default function Home() {
 
 
   return (
-    <div>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'row',
-        margin: 'auto',
-        width: '80%',
-        justifyContent: 'center'
-      }} >
-        {/* Przyciski */}
-        <button style={{
-          display: 'flex',
-          margin: 'auto',
-          marginBottom: '2rem',
-          marginTop: '2rem',
-          fontSize: '1rem',
-        }} onClick={() => setShowUpload(true)}>
-          Dodaj obrazek
-        </button>
-
-        <button style={{
-          display: 'flex',
-          margin: 'auto',
-          marginBottom: '2rem',
-          marginTop: '2rem',
-          fontSize: '1rem',
-        }} onClick={handleLogout}>
-          Wyloguj
-        </button>
-
-        <button
-          style={{
-            display: 'flex',
-            margin: 'auto',
-            marginBottom: '2rem',
-            marginTop: '2rem',
-            fontSize: '1rem',
-          }}
-          onClick={() => navigate("/profile")}
-        >
-          Mój Profil
+    <div className="page">
+      {/* Buttons */}
+      <div className="actions">
+        <button onClick={() => setShowUpload(true)}>Dodaj obrazek</button>
+        <button className="secondary" onClick={handleLogout}>Wyloguj</button>
+        <button className="secondary" onClick={() => navigate("/profile")}>
+          Mój profil
         </button>
       </div>
 
-
-
-      {/* Dodawanie nowego obrazka */}
+      {/* Upload panel */}
       {showUpload && (
-        <div style={{
-          width: '80%',
-          margin: 'auto',
-          marginBottom: '2rem',
-          display: 'flex',
-          flexDirection: 'column',
-        }}>
+        <div className="upload-panel">
           <h3>Dodaj obrazek</h3>
+
           <input
             type="file"
-            style={{
-              lineHeight: '2rem',
-            }}
             accept=".jpg,.png"
-            onChange={handleFileChange}/>
+            onChange={handleFileChange}
+          />
 
           <input
             type="text"
-            style={{
-              lineHeight: '2rem',
-            }}
             placeholder="Podpis"
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
           />
 
-          <div style={{
-            display: 'flex',
-            width: '100%',
-            margin: 'auto',
-            flexDirection: 'row',
-            justifyContent: 'space-around',
-            alignContent: 'space-around',
-          }}>
-            <button
-              onClick={handleUpload}
-              style={{
-                width: '30%',
-              }}>
-              Wyślij
-            </button>
-
-            <button
-              onClick={() => setShowUpload(false)}
-              style={{
-                width: '30%',
-              }}>
+          <div className="upload-actions">
+            <button onClick={handleUpload}>Wyślij</button>
+            <button className="secondary" onClick={() => setShowUpload(false)}>
               Anuluj
             </button>
-
           </div>
-
         </div>
       )}
 
-      {/* Lista wszystkich obrazków */}
-      <div style={{marginTop: "2rem"}}>
-        <ImageGrid/>
+      {/* Gallery */}
+      <div className="gallery">
+        <ImageGrid />
       </div>
-
-
     </div>
   );
+
 }

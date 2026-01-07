@@ -124,6 +124,7 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "S3_SECRET_KEY", value = var.minio_root_password },
         { name = "MINIO_ROOT_USER",     value = var.minio_root_user },
         { name = "MINIO_ROOT_PASSWORD", value = var.minio_root_password },
+        {name="dummy",  value = "http://localhost:8082" },
 
         # Dla Keycloaka EC2
         {

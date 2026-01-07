@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 import ImageCard from "./ImageCard";
 import keycloak from "../auth/keycloak";
-
-interface ImageItem {
-  id: string;
-  url: string;
-  caption: string;
-  uploadTime: string;
-}
+import type {ImageItem} from "../types/ImageItem.tsx";
 
 export default function ImageGrid() {
   const [images, setImages] = useState<ImageItem[]>([]);
@@ -16,14 +10,9 @@ export default function ImageGrid() {
   useEffect(() => {
     const loadImages = async () => {
       try {
-        // upewniamy się, że token jest aktualny
         await keycloak.updateToken(30);
-
         const token = keycloak.token;
-        if (!token) {
-          console.error("[ImageGrid] No Keycloak token available");
-          return;
-        }
+        if (!token) return;
 
         const res = await fetch(`${API}/api/images`, {
           headers: {
@@ -31,15 +20,7 @@ export default function ImageGrid() {
           },
         });
 
-        if (!res.ok) {
-          const txt = await res.text();
-          console.error(
-            "[ImageGrid] Backend error:",
-            res.status,
-            txt
-          );
-          return;
-        }
+        if (!res.ok) return;
 
         const data = await res.json();
         setImages(data);
@@ -55,10 +36,9 @@ export default function ImageGrid() {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(3, 1fr)",
-        gap: "10px",
-        maxWidth: "100%",
-        margin: "auto",
+        gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+        gap: "1.5rem",
+        width: "100%",
       }}
     >
       {images.map((img) => (

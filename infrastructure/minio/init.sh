@@ -1,12 +1,17 @@
 #!/bin/sh
 set -eu
 
+if [ -z "$MEDIA_BUCKET" ]; then
+  echo "ERROR: MEDIA_BUCKET is not set"
+  exit 1
+fi
+
 : "${S3_ACCESS_KEY:?missing}"
 : "${S3_SECRET_KEY:?missing}"
 : "${MEDIA_BUCKET:?missing}"
 
 echo "Waiting for MinIO..."
-until mc alias set local http://localhost:9000 "$S3_ACCESS_KEY" "$S3_SECRET_KEY"; do
+until mc alias set local http://minio:9000 "$S3_ACCESS_KEY" "$S3_SECRET_KEY"; do
   sleep 2
 done
 
