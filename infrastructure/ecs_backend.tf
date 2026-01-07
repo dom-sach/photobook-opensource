@@ -14,8 +14,9 @@ resource "aws_ecs_task_definition" "backend" {
     # =========================
     {
       name      = "minio"
-      image     = "minio/minio:RELEASE.2024-10-13T13-34-11Z.fips"
+      image     = "${aws_ecr_repository.minio.repository_url}:latest"
       essential = true
+
 
       command = [
         "server",
@@ -47,44 +48,6 @@ resource "aws_ecs_task_definition" "backend" {
           awslogs-group         = aws_cloudwatch_log_group.backend.name
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "minio"
-        }
-      }
-    },
-
-    # =========================
-    # MINIO INIT (CREATE BUCKET)
-    # =========================
-    {
-      name      = "minio-init"
-      image     = "${aws_ecr_repository.minio.repository_url}:latest"
-      essential = false
-
-      dependsOn = [
-        {
-          containerName = "minio"
-          condition     = "START"
-        }
-      ]
-
-      environment = [
-        { name = "MINIO_ENDPOINT",    value = "http://localhost:9000" },
-        { name = "MINIO_BUCKET",      value = var.minio_bucket },
-        { name = "MEDIA_BUCKET", value = var.minio_bucket },
-        { name = "MINIO_ACCESS_KEY",  value = var.minio_root_user },
-        { name = "MINIO_SECRET_KEY",  value = var.minio_root_password },
-        { name = "S3_ACCESS_KEY", value = var.minio_root_user },
-        { name = "S3_SECRET_KEY", value = var.minio_root_password },
-        { name = "MINIO_ROOT_USER",     value = var.minio_root_user },
-        { name = "MINIO_ROOT_PASSWORD", value = var.minio_root_password },
-        {name="dummy", value = "minio"},
-      ]
-
-      logConfiguration = {
-        logDriver = "awslogs",
-        options = {
-          awslogs-group         = aws_cloudwatch_log_group.backend.name
-          awslogs-region        = var.aws_region
-          awslogs-stream-prefix = "minio-init"
         }
       }
     },
@@ -124,7 +87,7 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "S3_SECRET_KEY", value = var.minio_root_password },
         { name = "MINIO_ROOT_USER",     value = var.minio_root_user },
         { name = "MINIO_ROOT_PASSWORD", value = var.minio_root_password },
-        {name="dummy",  value = "http://localhost:8082" },
+
 
         # Dla Keycloaka EC2
         {
