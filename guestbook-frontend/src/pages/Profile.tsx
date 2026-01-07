@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import keycloak from "../auth/keycloak.ts";
 
 interface Profile {
   email: string;
@@ -12,33 +13,52 @@ export default function Profile() {
   const API = import.meta.env.VITE_BACKEND_URL;
 
   const [profile, setProfile] = useState<Profile | null>(null);
-  // @ts-ignore
   const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
   const [favoriteColor, setFavoriteColor] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("id_token");
+    const loadProfile = async () => {
+      try {
+        // @ts-ignore
+        await keycloak.updateToken(30);
+        // @ts-ignore
+        const token = keycloak.token;
 
-    fetch(`${API}/api/profile`, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
+        if (!token) return;
+
+        const res = await fetch(`${API}/api/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          console.error("Profile fetch failed", res.status);
+          return;
+        }
+
+        const data = await res.json();
         setProfile(data);
         setEmail(data.email);
         setBio(data.bio);
         setFavoriteColor(data.favoriteColor);
-      })
-      .catch((err) => console.error("Błąd pobierania profilu:", err));
-  }, []);
+
+      } catch (err) {
+        console.error("Błąd pobierania profilu:", err);
+      }
+    };
+
+    loadProfile();
+  }, [API]);
 
 
   // Aktualizacja profilu
   const handleSave = async () => {
-    const token = localStorage.getItem("id_token");
+    // @ts-ignore
+    await keycloak.updateToken(30);
+    // @ts-ignore
+    const token = keycloak.token;
 
     await fetch(`${API}/api/profile`, {
       method: "POST",
@@ -47,13 +67,14 @@ export default function Profile() {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        bio: bio,
-        favoriteColor: favoriteColor,
+        bio,
+        favoriteColor,
       }),
     });
 
     alert("Zapisano!");
   };
+
 
 
   if (!profile) return <p>Ładowanie profilu...</p>;

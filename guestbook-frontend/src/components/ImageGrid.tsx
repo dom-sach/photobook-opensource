@@ -40,7 +40,7 @@ export default function ImageGrid() {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
         gap: "1.5rem",
         width: "100%",
       }}

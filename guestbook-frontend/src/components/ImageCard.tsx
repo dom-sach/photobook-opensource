@@ -96,7 +96,7 @@ export default function ImageCard({ image }: { image: ImageItem }) {
         loading="lazy"
         style={{
           width: "100%",
-          height: "220px",
+          height: "350px",
           objectFit: "cover",
           background: "#eee",
           borderRadius: "8px"
