@@ -74,15 +74,6 @@ resource "aws_ecs_task_definition" "backend" {
       ]
 
       environment = [
-        {
-          name  = "SPRING_DATASOURCE_URL"
-          value = "jdbc:postgresql://${aws_instance.db.private_ip}:5432/${var.db_name}"
-        },
-        {
-          name  = "SPRING_DATASOURCE_USERNAME"
-          value = var.db_user
-        },
-
         # === MinIO / S3 ===
         { name = "MINIO_ENDPOINT",    value = "http://localhost:9000" },
         { name = "MINIO_BUCKET",      value = var.minio_bucket },
@@ -97,7 +88,14 @@ resource "aws_ecs_task_definition" "backend" {
           name  = "PUBLIC_BASE_URL"
           value = "http://${aws_lb.guestbook_alb.dns_name}"
         },
+        {name="dummy", value="dummy"},
+        {name="dummy", value="dummy"},
 
+
+        { name = "DB_NAME", value = var.db_name },
+        { name = "SPRING_DATASOURCE_URL", value = "jdbc:postgresql://localhost:5432/${var.db_name}" },
+        { name = "SPRING_DATASOURCE_USERNAME", value = "postgres" },
+        { name = "SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT", value = "-1" },
 
         # Dla Keycloaka EC2
         {
@@ -115,6 +113,7 @@ resource "aws_ecs_task_definition" "backend" {
           name      = "SPRING_DATASOURCE_PASSWORD"
           valueFrom = aws_ssm_parameter.db_password.arn
         }
+
       ]
 
       logConfiguration = {

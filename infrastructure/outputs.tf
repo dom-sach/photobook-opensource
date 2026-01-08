@@ -11,13 +11,13 @@ output "public_subnets" {
 }
 
 # dla db
-output "db_private_ip" {
-  value = aws_instance.db.private_ip
-}
-
-output "db_public_ip" {
-  value = aws_instance.db.public_ip
-}
+# output "db_private_ip" {
+#   value = aws_instance.db.private_ip
+# }
+#
+# output "db_public_ip" {
+#   value = aws_instance.db.public_ip
+# }
 
 output "backend_url" {
   value = "http://${aws_lb.guestbook_alb.dns_name}/api"
