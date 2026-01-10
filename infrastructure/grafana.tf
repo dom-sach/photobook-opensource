@@ -28,24 +28,17 @@ resource "aws_ecs_task_definition" "grafana" {
         { name = "GF_SERVER_SERVE_FROM_SUB_PATH", value = "true" }
       ]
 
-      mountPoints = [
-        {
-          sourceVolume  = "grafana-provisioning"
-          containerPath = "/etc/grafana/provisioning"
-          readOnly      = true
-        }
-      ]
-
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = aws_cloudwatch_log_group.backend.name
+          awslogs-group         = aws_cloudwatch_log_group.grafana.name
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "grafana"
         }
       }
     }
   ])
+
 }
 
 resource "aws_ecs_service" "grafana" {
@@ -70,4 +63,18 @@ resource "aws_ecs_service" "grafana" {
   depends_on = [
     aws_lb_listener.http
   ]
+}
+
+# render pliku datasource.yml
+data "template_file" "grafana_datasource" {
+  template = file("${path.module}/grafana-datasource.yml.tpl")
+
+  vars = {
+    alb_dns = aws_lb.guestbook_alb.dns_name
+  }
+}
+
+resource "local_file" "grafana_datasource" {
+  content  = data.template_file.grafana_datasource.rendered
+  filename = "${path.module}/grafana/provisioning/datasources/datasource.yml"
 }

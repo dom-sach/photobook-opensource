@@ -1,11 +1,12 @@
 apiVersion: 1
 
 providers:
-  - name: 'default'
+  - name: Guestbook
     orgId: 1
-    folder: 'Guestbook'
+    folder: Guestbook
+    folderUid: guestbook
     type: file
     disableDeletion: false
-    updateIntervalSeconds: 10
+    editable: true
     options:
       path: /etc/grafana/provisioning/dashboards

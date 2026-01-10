@@ -1,20 +1,15 @@
 @echo off
-setlocal enabledelayedexpansion
+echo === Building Grafana image ===
 
-echo Budowanie obrazu Grafany...
-docker build -t guestbook-grafana grafana
+docker build -t guestbook-grafana ./grafana
 IF ERRORLEVEL 1 EXIT /B 1
 
-echo Logowanie do ECR...
-FOR /F "tokens=*" %%i IN ('aws ecr get-login-password --region %AWS_REGION%') DO docker login --username AWS --password %%i %ECR_URL%
+echo Logging to ECR...
+aws ecr get-login-password --region %AWS_REGION% | docker login --username AWS --password-stdin %ECR_URL%
 IF ERRORLEVEL 1 EXIT /B 1
 
-echo Tagowanie obrazu...
 docker tag guestbook-grafana:latest %ECR_URL%:latest
 IF ERRORLEVEL 1 EXIT /B 1
 
-echo Push do ECR...
 docker push %ECR_URL%:latest
 IF ERRORLEVEL 1 EXIT /B 1
-
-echo Grafana image pushed to %ECR_URL%

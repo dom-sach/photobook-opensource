@@ -12,3 +12,8 @@ resource "aws_cloudwatch_log_group" "minio" {
   name              = "/ecs/minio"
   retention_in_days = 7
 }
+
+resource "aws_cloudwatch_log_group" "grafana" {
+  name              = "/ecs/grafana"
+  retention_in_days = 7
+}
