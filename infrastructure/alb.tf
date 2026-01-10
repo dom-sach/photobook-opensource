@@ -102,9 +102,30 @@ resource "aws_lb_target_group" "prometheus_tg" {
   vpc_id      = aws_vpc.main.id
 
   health_check {
-    path = "/-/healthy"
+    path = "/prometheus/-/healthy"
   }
+
 }
+
+# resource "aws_lb_listener_rule" "prometheus_redirect" {
+#   listener_arn = aws_lb_listener.http.arn
+#   priority     = 105
+#
+#   action {
+#     type = "redirect"
+#
+#     redirect {
+#       path        = "/prometheus/"
+#       status_code = "HTTP_301"
+#     }
+#   }
+#
+#   condition {
+#     path_pattern {
+#       values = ["/prometheus"]
+#     }
+#   }
+# }
 
 resource "aws_lb_listener_rule" "prometheus_rule" {
   listener_arn = aws_lb_listener.http.arn
@@ -121,6 +142,7 @@ resource "aws_lb_listener_rule" "prometheus_rule" {
     }
   }
 }
+
 
 
 

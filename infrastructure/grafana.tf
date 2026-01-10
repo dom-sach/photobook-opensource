@@ -8,10 +8,14 @@ resource "aws_ecs_task_definition" "grafana" {
   execution_role_arn = var.lab_role_arn
   task_role_arn      = var.lab_role_arn
 
+  volume {
+    name = "grafana-provisioning"
+  }
+
   container_definitions = jsonencode([
     {
       name  = "grafana"
-      image = "grafana/grafana:10.4.2"
+      image = "${aws_ecr_repository.grafana.repository_url}:latest"
 
       portMappings = [
         { containerPort = 3000 }
@@ -19,7 +23,17 @@ resource "aws_ecs_task_definition" "grafana" {
 
       environment = [
         { name = "GF_SECURITY_ADMIN_USER", value = "admin" },
-        { name = "GF_SECURITY_ADMIN_PASSWORD", value = "admin" }
+        { name = "GF_SECURITY_ADMIN_PASSWORD", value = "admin" },
+        { name = "GF_SERVER_ROOT_URL", value = "%(protocol)s://%(domain)s/grafana/" },
+        { name = "GF_SERVER_SERVE_FROM_SUB_PATH", value = "true" }
+      ]
+
+      mountPoints = [
+        {
+          sourceVolume  = "grafana-provisioning"
+          containerPath = "/etc/grafana/provisioning"
+          readOnly      = true
+        }
       ]
 
       logConfiguration = {

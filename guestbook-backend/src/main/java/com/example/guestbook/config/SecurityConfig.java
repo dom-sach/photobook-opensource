@@ -1,5 +1,9 @@
 package com.example.guestbook.config;
 
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.actuate.info.InfoEndpoint;
+import org.springframework.boot.actuate.metrics.export.prometheus.PrometheusScrapeEndpoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -22,6 +26,13 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                EndpointRequest.to(
+                                        PrometheusScrapeEndpoint.class,
+                                        HealthEndpoint.class,
+                                        InfoEndpoint.class
+                                )
+                        ).permitAll()
                         // health public
                         .requestMatchers("/health","/api/images/**",
                                 "/actuator/health",

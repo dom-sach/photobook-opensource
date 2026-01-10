@@ -11,14 +11,16 @@ resource "aws_ecs_task_definition" "prometheus" {
   container_definitions = jsonencode([
     {
       name  = "prometheus"
-      image = "prom/prometheus:v2.52.0"
+      image = "${aws_ecr_repository.prometheus.repository_url}:latest"
 
       portMappings = [
         { containerPort = 9090 }
       ]
 
       command = [
-        "--config.file=/etc/prometheus/prometheus.yml"
+        "--config.file=/etc/prometheus/prometheus.yml",
+        "--web.route-prefix=/prometheus",
+        "--web.external-url=/prometheus"
       ]
 
       logConfiguration = {
@@ -31,6 +33,7 @@ resource "aws_ecs_task_definition" "prometheus" {
       }
     }
   ])
+
 }
 
 
