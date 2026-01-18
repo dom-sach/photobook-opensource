@@ -1,27 +1,3 @@
-# vpc
-# resource "aws_vpc" "keycloak" {
-#   cidr_block           = "10.20.0.0/16"
-#   enable_dns_support   = true
-#   enable_dns_hostnames = true
-# }
-
-# subnet
-# resource "aws_subnet" "keycloak_public" {
-#   count                   = 2
-#   vpc_id                  = aws_vpc.main.id
-#   cidr_block              = cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)
-#   map_public_ip_on_launch = true
-# }
-
-# target group
-# resource "aws_lb_target_group" "keycloak" {
-#   vpc_id     = aws_vpc.keycloak.id
-#   port       = 8180
-#   protocol   = "HTTP"
-#   target_type = "instance"
-# }
-
-
 resource "aws_security_group" "keycloak" {
   name   = "keycloak-sg"
   vpc_id = aws_vpc.main.id

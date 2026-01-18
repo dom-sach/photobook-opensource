@@ -11,4 +11,4 @@ scrape_configs:
     metrics_path: /api/actuator/prometheus
     static_configs:
       - targets:
-          - guestbook-alb-oss-1962663365.us-east-1.elb.amazonaws.com
+          - guestbook-alb-oss-26598447.us-east-1.elb.amazonaws.com

@@ -44,8 +44,16 @@ resource "aws_ecs_task_definition" "backend" {
           name  = "PUBLIC_BASE_URL"
           value = "http://${aws_lb.guestbook_alb.dns_name}"
         },
-
-        {name="fummy", value="dummy"}
+        # Dla bazy danych postgres dla metadanych obrazków
+        {
+          name = "SPRING_DATASOURCE_URL"
+          value = "jdbc:postgresql://${aws_instance.postgres.private_ip}:5432/guestbook"
+        },
+        {
+          name = "SPRING_DATASOURCE_USERNAME"
+          value = "postgres"
+        },
+        { name = "SPRING_DATASOURCE_PASSWORD", value = "postgres" }
       ]
 
       logConfiguration = {
@@ -76,10 +84,12 @@ resource "aws_ecs_task_definition" "backend" {
       environment = [
         # === MinIO / S3 ===
         { name = "MINIO_ENDPOINT",    value = "http://localhost:9000" },
+        # nowe wersje zmiennych zostawione do wglądu
         { name = "MINIO_BUCKET",      value = var.minio_bucket },
-        { name = "MEDIA_BUCKET", value = var.minio_bucket },
         { name = "MINIO_ACCESS_KEY",  value = var.minio_root_user },
         { name = "MINIO_SECRET_KEY",  value = var.minio_root_password },
+
+        { name = "MEDIA_BUCKET", value = var.minio_bucket },
         { name = "S3_ACCESS_KEY", value = var.minio_root_user },
         { name = "S3_SECRET_KEY", value = var.minio_root_password },
         { name = "MINIO_ROOT_USER",     value = var.minio_root_user },
@@ -88,14 +98,11 @@ resource "aws_ecs_task_definition" "backend" {
           name  = "PUBLIC_BASE_URL"
           value = "http://${aws_lb.guestbook_alb.dns_name}"
         },
-        {name="dummy", value="dummy"},
-        {name="dummy", value="dummy"},
-
 
         { name = "DB_NAME", value = var.db_name },
-        { name = "SPRING_DATASOURCE_URL", value = "jdbc:postgresql://localhost:5432/${var.db_name}" },
-        { name = "SPRING_DATASOURCE_USERNAME", value = "postgres" },
-        { name = "SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT", value = "-1" },
+        # { name = "SPRING_DATASOURCE_URL", value = "jdbc:postgresql://localhost:5432/${var.db_name}" },
+        # { name = "SPRING_DATASOURCE_USERNAME", value = "postgres" },
+        # { name = "SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT", value = "-1" },
 
         # Dla Keycloaka EC2
         {
@@ -106,14 +113,17 @@ resource "aws_ecs_task_definition" "backend" {
           name  = "OIDC_ISSUER_URI"
           value = "http://${aws_lb.guestbook_alb.dns_name}/realms/guestbook"
         },
-      ]
 
-      secrets = [
+        # Dla bazy danych postgres dla metadanych obrazków
         {
-          name      = "SPRING_DATASOURCE_PASSWORD"
-          valueFrom = aws_ssm_parameter.db_password.arn
-        }
-
+          name = "SPRING_DATASOURCE_URL"
+          value = "jdbc:postgresql://${aws_instance.postgres.private_ip}:5432/guestbook"
+        },
+        {
+          name = "SPRING_DATASOURCE_USERNAME"
+          value = "postgres"
+        },
+        { name = "SPRING_DATASOURCE_PASSWORD", value = "postgres" }
       ]
 
       logConfiguration = {
@@ -148,13 +158,11 @@ resource "aws_ecs_service" "backend" {
     container_port   = 8080
   }
 
-  # MEDIA → minio
   load_balancer {
     target_group_arn = aws_lb_target_group.minio.arn
     container_name   = "minio"
     container_port   = 9000
   }
-
 
   depends_on = [
     aws_lb_listener_rule.api_backend,

@@ -8,3 +8,4 @@ resource "aws_ssm_parameter" "db_password" {
     Name = "guestbook-db-password"
   }
 }
+

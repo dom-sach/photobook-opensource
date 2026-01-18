@@ -1,18 +1,22 @@
+# === Load Balancer ===
 resource "aws_lb" "guestbook_alb" {
   name               = "guestbook-alb-oss"
   load_balancer_type = "application"
-  internal           = false
+  internal           = false # jest publiczny
 
+  # Internet --> ALB (80)
+  # ALB --> ECS
   security_groups = [aws_security_group.alb_sg.id]
   subnets         = aws_subnet.public[*].id
 }
 
-
+# Listener dla ALB - nasłuchiwanie na porcie 80
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.guestbook_alb.arn
   port              = 80
   protocol          = "HTTP"
 
+  # jeśli nic nie dopasuje - wysyła na front
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.frontend.arn
@@ -20,14 +24,12 @@ resource "aws_lb_listener" "http" {
 }
 
 
-
-
 # Target Group dla backendu
 resource "aws_lb_target_group" "backend" {
   name        = "guestbook-backend-tg"
   port        = 8080
   protocol    = "HTTP"
-  target_type = "ip"
+  target_type = "ip" # ALB wysyła requesty bezpośrednio do IP tasków
   vpc_id      = aws_vpc.main.id
 
   health_check {
@@ -40,6 +42,7 @@ resource "aws_lb_target_group" "backend" {
   }
 }
 
+# Target group dla frontu
 resource "aws_lb_target_group" "frontend" {
   name        = "guestbook-frontend-tg"
   port        = 80
@@ -57,43 +60,7 @@ resource "aws_lb_target_group" "frontend" {
   }
 }
 
-
-# resource "aws_lb_listener_rule" "frontend" {
-#   listener_arn = aws_lb_listener.http.arn
-#   priority     = 100
-#
-#   action {
-#     type             = "forward"
-#     target_group_arn = aws_lb_target_group.frontend.arn
-#   }
-#
-#   condition {
-#     path_pattern {
-#       values = ["/*"]
-#     }
-#   }
-# }
-
-
-# Listener rule /api/* → backend
-resource "aws_lb_listener_rule" "api_backend" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 30
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.backend.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/api/*"]
-    }
-  }
-}
-
-
-# Prometheus
+# Target group dla Prometheus
 resource "aws_lb_target_group" "prometheus_tg" {
   name        = "prometheus-tg"
   port        = 9090
@@ -104,49 +71,9 @@ resource "aws_lb_target_group" "prometheus_tg" {
   health_check {
     path = "/prometheus/-/healthy"
   }
-
 }
 
-# resource "aws_lb_listener_rule" "prometheus_redirect" {
-#   listener_arn = aws_lb_listener.http.arn
-#   priority     = 105
-#
-#   action {
-#     type = "redirect"
-#
-#     redirect {
-#       path        = "/prometheus/"
-#       status_code = "HTTP_301"
-#     }
-#   }
-#
-#   condition {
-#     path_pattern {
-#       values = ["/prometheus"]
-#     }
-#   }
-# }
-
-resource "aws_lb_listener_rule" "prometheus_rule" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 110
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.prometheus_tg.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/prometheus/*"]
-    }
-  }
-}
-
-
-
-
-# Grafana
+# target group dla Grafana
 resource "aws_lb_target_group" "grafana_tg" {
   name        = "grafana-tg"
   port        = 3000
@@ -159,24 +86,7 @@ resource "aws_lb_target_group" "grafana_tg" {
   }
 }
 
-
-resource "aws_lb_listener_rule" "grafana_rule" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 120
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.grafana_tg.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/grafana/*"]
-    }
-  }
-}
-
-
+# Target group dla minio
 resource "aws_lb_target_group" "minio" {
   name        = "guestbook-minio"
   port        = 9000
@@ -195,6 +105,26 @@ resource "aws_lb_target_group" "minio" {
 }
 
 
+# === LISTENER RULES ===
+
+# Listener /api/* --> backend
+resource "aws_lb_listener_rule" "api_backend" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 30
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/*"]
+    }
+  }
+}
+
+# Listener dla /media/* --> MinIO
 resource "aws_lb_listener_rule" "media_minio" {
   listener_arn = aws_lb_listener.http.arn
   priority     = 20
@@ -211,7 +141,36 @@ resource "aws_lb_listener_rule" "media_minio" {
   }
 }
 
+# Listener dla /prometheus/* --> prometheus
+resource "aws_lb_listener_rule" "prometheus_rule" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 110
 
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.prometheus_tg.arn
+  }
 
+  condition {
+    path_pattern {
+      values = ["/prometheus/*"]
+    }
+  }
+}
 
+# Listener dla /grafana/* --> Grafana
+resource "aws_lb_listener_rule" "grafana_rule" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 120
 
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.grafana_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/grafana/*"]
+    }
+  }
+}
